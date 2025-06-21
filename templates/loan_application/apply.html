@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Apply for a New Loan</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+        <a href="{% url 'loan_application:list' %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

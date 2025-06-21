@@ -1,0 +1,333 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Equity Bank Rwanda</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6fa;
+        }
+        .equity-sidebar {
+            background: #f1f3f8;;
+            min-height: 100vh;
+            color: #fff;
+            padding: 0;
+        }
+        .equity-sidebar .logo {
+            margin: 32px 0 16px 0;
+        }
+        .equity-sidebar .sidebar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        .equity-sidebar .nav-link {
+            color:black;
+            font-size: 1.1rem;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .equity-sidebar .nav-link.active, .equity-sidebar .nav-link:hover {
+            background: #b42b2b;
+            color:white;
+        }
+        .equity-sidebar .nav-link i {
+            margin-right: 12px;
+            font-size: 1.3rem;
+        }
+        .main-content {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 16px rgba(35,41,70,0.07);
+            margin: 32px 0;
+            padding: 32px 32px 24px 32px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .dashboard-header h2 {
+            font-weight: 700;
+            color: #232946;
+        }
+        .dashboard-header .subtitle {
+            color: #6e6e6e;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        .dashboard-header .profile {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #eebbc3;
+        }
+        .summary-cards .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: none;
+            text-align: center;
+            padding: 24px 0;
+            background: #f7f7fa;
+            transition: box-shadow 0.2s;
+        }
+        .summary-cards .card:hover {
+            box-shadow: 0 4px 24px rgba(35,41,70,0.10);
+        }
+        .summary-cards .card i {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        .summary-cards .card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #232946;
+        }
+        .summary-cards .card span {
+            color: #6e6e6e;
+            font-size: 1.1rem;
+        }
+        .recent-applications, .loan-approvals-chart {
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            background: #fff;
+            padding: 24px;
+            height: 100%;
+        }
+        .recent-applications {
+            border-right: 2px solid #e5e7eb;
+        }
+        .recent-applications .badge {
+            font-size: 1rem;
+            padding: 6px 16px;
+            border-radius: 12px;
+        }
+        .badge.bg-success {
+            background-color: #3dd598 !important;
+            color: #fff !important;
+        }
+        .badge.bg-danger {
+            background-color: #ff6363 !important;
+            color: #fff !important;
+        }
+        .badge.bg-warning {
+            background-color: #ffe066 !important;
+            color: #232946 !important;
+        }
+        .pagination .page-link {
+            color: #232946;
+            border: none;
+            background: transparent;
+        }
+        .pagination .page-item.active .page-link {
+            background: #eebbc3;
+            color: #232946;
+            border-radius: 8px;
+        }
+        @media (max-width: 991px) {
+            .main-content {
+                padding: 16px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <!-- Profile Header Row (full width) -->
+    <div class="row" style="background:#fff; border-bottom:2px solid #e5e7eb; align-items:center; min-height:70px;">
+        <div class="col-12 d-flex align-items-center justify-content-between px-4" style="height:70px;">
+            <div class="d-flex align-items-center">
+                <img src="{% static 'images/equity_logo.png' %}" alt="Equity Bank Rwanda" style="height:48px; margin-right:12px;">
+                <span class="fw-bold fs-5 text-dark">LOAN EVALUATION</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <!-- Status Filter Dropdown Only -->
+                <form id="statusFilterForm" method="get" action="" class="d-flex align-items-center me-3" style="background:#f7f7fa; border-radius:8px; padding:4px 12px; box-shadow:0 1px 4px rgba(35,41,70,0.06); min-width:220px;">
+                    <select class="form-select form-select-sm" name="status" style="width:160px; border:none; background:transparent;">
+                        <option value="">All Statuses</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                    <button type="submit" class="btn btn-danger btn-sm ms-2" style="background:#b42b2b; border:none;"><i class="bi bi-search"></i></button>
+                </form>
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="profile" class="profile me-2">
+                        {% else %}
+                            <img src="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png" alt="profile" class="profile me-2">
+                        {% endif %}
+                        <span class="fw-semibold text-dark">{{ user.get_full_name }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li><a class="dropdown-item" href="{% url 'authentication:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'authentication:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <!-- Sidebar (starts below header) -->
+        <nav class="col-md-2 equity-sidebar d-flex flex-column align-items-center pt-4" style="border-right:1px solid #e5e7eb; min-height:calc(100vh - 70px);">
+            <!-- Removed logo from sidebar -->
+            <div class="sidebar-title">Admin</div>
+            <ul class="nav flex-column w-100">
+                <li class="nav-item mb-2">
+                    <a class="nav-link active" href="#"><i class="bi bi-house-door"></i> Dashboard</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#"><i class="bi bi-file-earmark-text"></i> Loan Applications</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#"><i class="bi bi-people"></i> Users</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#"><i class="bi bi-cpu"></i> AI Model</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#"><i class="bi bi-folder"></i> Documents</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#"><i class="bi bi-gear"></i> Settings</a>
+                </li>
+            </ul>
+        </nav>
+        <!-- Main Content -->
+        <main class="col-md-10 main-content">
+            <div class="dashboard-header" style="display:none;"></div>
+            <!-- Summary Cards -->
+            <div class="row summary-cards mb-4">
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="card">
+                        <i class="bi bi-file-earmark-text text-primary"></i>
+                        <h3>120</h3>
+                        <span>Total Applications</span>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="card">
+                        <i class="bi bi-person-check text-info"></i>
+                        <h3>45</h3>
+                        <span>Approved</span>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="card">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <h3>12</h3>
+                        <span>Pending</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <i class="bi bi-x-circle text-danger"></i>
+                        <h3>8</h3>
+                        <span>Rejected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="recent-applications">
+                        <h5 class="mb-3">Recent Loan Applications</h5>
+                        <table class="table table-borderless">
+                            <thead>
+                                <tr>
+                                    <th>Applicant</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Emma Johnson</td>
+                                    <td>$20,000</td>
+                                    <td><span class="badge bg-success">Approved</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Michael Smith</td>
+                                    <td>$15,000</td>
+                                    <td><span class="badge bg-warning">Pending</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Sarah Brown</td>
+                                    <td>$35,000</td>
+                                    <td><span class="badge bg-danger">Rejected</span></td>
+                                </tr>
+                                <tr>
+                                    <td>David Wilson</td>
+                                    <td>$50,000</td>
+                                    <td><span class="badge bg-success">Approved</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="d-flex justify-content-end">
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><a class="page-link" href="#">&lt;</a></li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">&gt;</a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="loan-approvals-chart">
+                        <h5 class="mb-3">Loan Approvals</h5>
+                        <canvas id="loanApprovalsChart" height="180"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<!-- Footer -->
+<footer class="text-center py-3 mt-4" style="background:#f1f3f8; border-top:1px solid #e5e7eb; color:#6e6e6e;">
+    &copy; {{ year|default:2025 }} Equity Bank Rwanda. All rights reserved.
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var ctx = document.getElementById('loanApprovalsChart').getContext('2d');
+    var loanApprovalsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024'],
+            datasets: [{
+                label: 'Loan Approvals',
+                data: [25, 40, 35, 50, 45, 60, 55, 65, 60, 70, 68, 75],
+                borderColor: '#23374d',
+                backgroundColor: 'rgba(35,55,77,0.07)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+</body>
+</html>
