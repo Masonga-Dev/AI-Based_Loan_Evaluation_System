@@ -1,41 +1,106 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4">My Loan Applications</h2>
-    <div class="mb-3 text-end">
-        <a href="{% url 'loan_application:apply' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Apply for New Loan
-        </a>
+<style>
+    .custom-header-fixed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1040;
+        background: #fff;
+        border-bottom: 2px solid #e5e7eb;
+        min-height: 70px;
+        height: 70px;
+    }
+    .main-content-with-header {
+        margin-top: 70px;
+    }
+</style>
+<div class="container-fluid px-0">
+    <!-- Static Profile Header Row (full width) -->
+    <div class="row custom-header-fixed">
+        <div class="col-12 d-flex align-items-center justify-content-between px-4" style="height:70px;">
+            <div class="d-flex align-items-center">
+                <img src="{% static 'images/equity_logo.png' %}" alt="Equity Bank Rwanda" style="height:48px; margin-right:12px;">
+                <span class="fw-bold fs-5 text-dark">LOAN EVALUATION</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="profile" class="profile me-2" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            <img src="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png" alt="profile" class="profile me-2" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                        {% endif %}
+                        <span class="fw-semibold text-dark">{{ user.get_full_name }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li><a class="dropdown-item" href="{% url 'authentication:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'authentication:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
-    {% if loan_applications %}
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Application #</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Submitted</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for app in loan_applications %}
-                <tr>
-                    <td>{{ app.application_number }}</td>
-                    <td>{{ app.get_loan_type_display }}</td>
-                    <td>{{ app.loan_amount }}</td>
-                    <td>{{ app.get_status_display }}</td>
-                    <td>{{ app.created_at|date:'Y-m-d' }}</td>
-                    <td><a href="{% url 'loan_application:detail' app.id %}" class="btn btn-sm btn-outline-info">View</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="row main-content-with-header">
+        <!-- Sidebar (dynamic, not fixed) -->
+        <nav class="col-md-2 equity-sidebar d-flex flex-column align-items-center pt-4" style="border-right:1px solid #e5e7eb; min-height:calc(100vh - 70px); background:#f1f3f8;">
+            <div class="sidebar-title mb-4" style="font-size:1.3rem; font-weight:600; color:#232946;">Menu</div>
+            <ul class="nav flex-column w-100">
+                <li class="nav-item mb-2">
+                    <a class="nav-link active" href="{% url 'dashboard:admin_dashboard' %}"><i class="bi bi-house-door"></i> Dashboard</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'loan_application:apply' %}"><i class="bi bi-file-earmark-plus"></i> Apply for Loan</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'loan_application:my_applications' %}"><i class="bi bi-file-earmark-text"></i> My Applications</a>
+                </li>
+            </ul>
+        </nav>
+        <!-- Main Content -->
+        <main class="col-md-10">
+            <div class="container py-4">
+                <h2 class="mb-4">My Loan Applications</h2>
+                <div class="mb-3 text-end">
+                    <a href="{% url 'loan_application:apply' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Apply for New Loan
+                    </a>
+                </div>
+                {% if loan_applications %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Application #</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in loan_applications %}
+                            <tr>
+                                <td>{{ app.application_number }}</td>
+                                <td>{{ app.get_loan_type_display }}</td>
+                                <td>{{ app.loan_amount }}</td>
+                                <td>{{ app.get_status_display }}</td>
+                                <td>{{ app.created_at|date:'Y-m-d' }}</td>
+                                <td><a href="{% url 'loan_application:detail' app.id %}" class="btn btn-sm btn-outline-info">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="alert alert-info">You have not submitted any loan applications yet.</div>
+                {% endif %}
+            </div>
+        </main>
     </div>
-    {% else %}
-        <div class="alert alert-info">You have not submitted any loan applications yet.</div>
-    {% endif %}
 </div>
 {% endblock %}
