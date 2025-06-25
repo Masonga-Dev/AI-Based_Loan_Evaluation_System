@@ -44,3 +44,7 @@ factory-boy==3.3.0
 celery==5.3.4
 redis==5.0.1
 requests==2.31.0
+
+# Django Crispy Forms
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7

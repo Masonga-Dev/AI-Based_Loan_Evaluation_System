@@ -1,0 +1,58 @@
+<style>
+.sidebar-applicant {
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+    min-height: 100vh;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+}
+.sidebar-applicant .nav-link {
+    color: #2c3e50;
+    font-weight: 500;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+.sidebar-applicant .nav-link.active, .sidebar-applicant .nav-link:hover {
+    background: linear-gradient(90deg,#1b1b1b 0%, #fc0c0c 100%);
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(124,63,0,0.08);
+}
+.sidebar-applicant .nav-link i {
+    margin-right: 8px;
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+.sidebar-applicant .fs-4 {
+    font-weight: 700;
+    color: #7c3f00;
+    letter-spacing: 1px;
+}
+</style>
+<div class="sidebar-applicant d-flex flex-column flex-shrink-0 p-3">
+  <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+    <span class="fs-4"><i class="bi bi-person-badge"></i> Applicant Menu</span>
+  </a>
+  <hr>
+  <ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item">
+      <a href="{% url 'dashboard:applicant_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'applicant_dashboard' %}active{% endif %}">
+        <i class="bi bi-house"></i> Dashboard
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'loan_application:apply_for_loan' %}" class="nav-link {% if request.resolver_match.url_name == 'apply_for_loan' %}active{% endif %}">
+        <i class="bi bi-file-earmark-plus"></i> Apply for Loan
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'loan_application:my_applications' %}" class="nav-link {% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}">
+        <i class="bi bi-list-check"></i> My Applications
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'dashboard:notifications' %}" class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <i class="bi bi-bell"></i> Notifications
+      </a>
+    </li>
+  </ul>
+</div>

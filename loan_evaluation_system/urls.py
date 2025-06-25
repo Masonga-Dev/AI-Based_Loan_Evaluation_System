@@ -19,7 +19,8 @@ urlpatterns = [
     path('applications/', include('apps.loan_application.urls')),
     path('documents/', include('apps.document_processing.urls')),
     path('ai/', include('apps.ai_evaluation.urls')),
-
+    # Admin dashboard
+    path('admin-dashboard/', include('apps.admin_dashboard.urls')),
     # API
     path('api/', include('apps.api.urls')),
 

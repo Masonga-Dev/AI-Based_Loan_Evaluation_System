@@ -6,6 +6,7 @@ app_name = 'loan_application'
 urlpatterns = [
     path('', views.ApplicationListView.as_view(), name='list'),
     path('apply/', views.apply_for_loan, name='apply'),
+    path('apply-for-loan/', views.apply_for_loan, name='apply_for_loan'),
     path('my-applications/', views.my_applications, name='my_applications'),
     path('review/', views.review_applications, name='review_applications'),
     path('<uuid:pk>/', views.ApplicationDetailView.as_view(), name='detail'),

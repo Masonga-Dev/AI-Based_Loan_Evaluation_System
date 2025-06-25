@@ -16,6 +16,13 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% block navbar %}
+        {% if user.is_authenticated %}
+            {% include 'dashboard/user_navbar.html' %}
+        {% else %}
+            {% include 'public_navbar.html' %}
+        {% endif %}
+    {% endblock %}
     <!-- Main Content -->
     <main class="container-fluid">
         <!-- Messages -->
@@ -33,7 +40,35 @@
         {% endif %}
         
         <!-- Page Content -->
-        {% block content %}{% endblock %}
+        {% block content %}
+            <div class="container-fluid">
+                <div class="row">
+                    {% if request.user.is_authenticated and request.user.role == 'applicant' %}
+                        <div class="col-md-2 p-0">
+                            {% block sidebar %}
+                                {% include 'dashboard/sidebar.html' %}
+                            {% endblock %}
+                        </div>
+                        <div class="col-md-10">
+                            {{ block.super }}
+                        </div>
+                    {% elif request.user.is_authenticated and request.user.role == 'admin' or request.user.is_authenticated and request.user.role == 'officer' or request.user.is_authenticated and request.user.role == 'manager' %}
+                        <div class="col-md-2 p-0">
+                            {% block admin_sidebar %}
+                                {% include 'dashboard/admin_sidebar.html' %}
+                            {% endblock %}
+                        </div>
+                        <div class="col-md-10">
+                            {{ block.super }}
+                        </div>
+                    {% else %}
+                        <div class="col-12">
+                            {{ block.super }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endblock %}
     </main>
     
     <!-- Footer -->

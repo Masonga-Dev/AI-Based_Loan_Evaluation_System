@@ -5,6 +5,18 @@ from django.db.models import Count, Q
 from datetime import datetime, timedelta
 from apps.loan_application.models import LoanApplication
 from apps.ai_evaluation.models import PredictionResult
+from django.urls import reverse
+from .models import Notification
+from django.views.decorators.csrf import csrf_exempt
+from .forms import ApplicantProfileForm
+from django.contrib import messages
+
+
+def home(request):
+    """
+    Home page view - shows professional landing page for all users
+    """
+    return render(request, 'home.html')
 
 
 def landing(request):
@@ -29,6 +41,13 @@ def dashboard_home(request):
     """
     user = request.user
     context = {}
+
+    # Enforce correct dashboard URL
+    path = request.path
+    if user.role == 'applicant' and not path.endswith('/applicant-dashboard/'):
+        return HttpResponseRedirect(reverse('dashboard:applicant_dashboard'))
+    elif user.role in ['officer', 'manager', 'admin'] and not path.endswith('/admin-dashboard/'):
+        return HttpResponseRedirect(reverse('dashboard:admin_dashboard'))
 
     if user.role == 'applicant':
         # Applicant dashboard
@@ -126,3 +145,47 @@ def recent_activity(request):
         })
 
     return JsonResponse({'activities': activities})
+
+
+@login_required
+def user_notifications(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10]
+    unread_count = notifications.filter(is_read=False).count()
+    data = {
+        'notifications': [
+            {
+                'id': n.id,
+                'message': n.message,
+                'created_at': n.created_at.strftime('%b %d, %Y %H:%M'),
+                'is_read': n.is_read,
+                'link': n.link
+            } for n in notifications
+        ],
+        'unread_count': unread_count
+    }
+    return JsonResponse(data)
+
+@csrf_exempt
+@login_required
+def mark_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'success': True})
+
+@login_required
+def notifications_page(request):
+    return render(request, 'dashboard/notifications.html')
+
+@login_required
+def edit_profile(request):
+    user = request.user
+    if request.method == 'POST':
+        form = ApplicantProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return render(request, 'dashboard/edit_profile.html', {'form': form})
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ApplicantProfileForm(instance=user)
+    return render(request, 'dashboard/edit_profile.html', {'form': form})

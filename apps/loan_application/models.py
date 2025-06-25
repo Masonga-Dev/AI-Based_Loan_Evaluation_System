@@ -107,6 +107,7 @@ class LoanApplication(models.Model):
     # Additional information
     notes = models.TextField(blank=True)
     rejection_reason = models.TextField(blank=True)
+    number_of_dependents = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = 'loan_application'

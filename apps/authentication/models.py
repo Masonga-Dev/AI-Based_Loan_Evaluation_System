@@ -21,6 +21,14 @@ class User(AbstractUser):
         blank=True,
         null=True
     )
+    account_number = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name='Equity Account Number',
+        help_text='Enter your Equity Bank account number.'
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='applicant')
     date_of_birth = models.DateField(null=True, blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)

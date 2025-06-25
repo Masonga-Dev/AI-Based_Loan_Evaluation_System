@@ -13,9 +13,10 @@ class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Email or Username',
+            'placeholder': 'Email',
             'autofocus': True
-        })
+        }),
+        label='Email'
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
@@ -26,7 +27,7 @@ class CustomAuthenticationForm(AuthenticationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].label = 'Email or Username'
+        self.fields['username'].label = 'Email'
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -58,18 +59,21 @@ class UserRegistrationForm(UserCreationForm):
     )
     phone_number = forms.CharField(
         max_length=15,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Phone Number (Optional)'
+            'placeholder': 'Phone Number'
         })
     )
-    role = forms.ChoiceField(
-        choices=[('applicant', 'Loan Applicant')],
-        initial='applicant',
-        widget=forms.Select(attrs={
-            'class': 'form-select'
-        })
+    account_number = forms.CharField(
+        max_length=10,
+        min_length=10,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Equity Account Number'
+        }),
+        label='Account Number'
     )
     terms_accepted = forms.BooleanField(
         required=True,
@@ -79,33 +83,68 @@ class UserRegistrationForm(UserCreationForm):
         label='I agree to the Terms and Conditions'
     )
 
+    from django_countries.fields import CountryField
+    gender = forms.ChoiceField(
+        choices=[('', 'Select a gender'), ('male', 'Male'), ('female', 'Female')],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    nationality = forms.ChoiceField(
+        choices=[('', 'Select nationality'), ('rwandan', 'Rwandan'), ('burundian', 'Burundian'), ('ugandan', 'Ugandan'), ('kenyan', 'Kenyan'), ('tanzanian', 'Tanzanian'), ('congolese', 'Congolese'), ('other', 'Other')],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    country_of_residence = CountryField(blank_label='Select a country').formfield(
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    national_id = forms.CharField(
+        max_length=16,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'National ID Number'
+        })
+    )
+    physical_address = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Physical Address'
+        })
+    )
+
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'phone_number', 'role', 'password1', 'password2')
+        fields = (
+            'email', 'first_name', 'last_name', 'gender', 'nationality', 'country_of_residence',
+            'national_id', 'physical_address', 'account_number', 'phone_number',
+            'password1', 'password2', 'terms_accepted'
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
         # Add Bootstrap classes to all fields
         for field_name, field in self.fields.items():
-            if field_name not in ['terms_accepted']:
+            if field.widget.__class__.__name__ == 'CheckboxInput':
+                field.widget.attrs['class'] = 'form-check-input'
+            elif field.widget.__class__.__name__ == 'Select':
+                field.widget.attrs['class'] = 'form-select'
+            else:
                 field.widget.attrs['class'] = 'form-control'
-        
         # Customize password fields
         self.fields['password1'].widget.attrs.update({
             'class': 'form-control',
-            'placeholder': 'Password'
+            'placeholder': 'Create New Password'
         })
         self.fields['password2'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Confirm Password'
         })
-        
-        # Customize username field
-        self.fields['username'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Username'
-        })
+        # Remove role and confirm_email fields if present
+        self.fields.pop('role', None)
+        self.fields.pop('confirm_email', None)
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -113,14 +152,27 @@ class UserRegistrationForm(UserCreationForm):
             raise forms.ValidationError('A user with this email already exists.')
         return email
 
+    def clean_account_number(self):
+        account_number = self.cleaned_data.get('account_number')
+        if not account_number.isdigit() or len(account_number) != 10:
+            raise forms.ValidationError('Equity Bank account number must be exactly 10 digits.')
+        if User.objects.filter(account_number=account_number).exists():
+            raise forms.ValidationError('This Equity Bank account number is already registered.')
+        return account_number
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         user.phone_number = self.cleaned_data.get('phone_number', '')
-        user.role = self.cleaned_data['role']
-        
+        user.role = 'applicant'  # Always set to applicant
+        user.account_number = self.cleaned_data['account_number']
+        user.gender = self.cleaned_data['gender']
+        user.nationality = self.cleaned_data['nationality']
+        user.country_of_residence = self.cleaned_data['country_of_residence']
+        user.national_id = self.cleaned_data['national_id']
+        user.physical_address = self.cleaned_data['physical_address']
         if commit:
             user.save()
         return user

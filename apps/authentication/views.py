@@ -66,6 +66,8 @@ def register_view(request):
             user.role = 'applicant'
             user.is_staff = False
             user.is_superuser = False
+            # Ensure username is set to a unique value (email)
+            user.username = user.email
             user.save()
 
             # Create user profile
@@ -85,6 +87,9 @@ def register_view(request):
 
             messages.success(request, 'Registration successful! You can now log in.')
             return redirect('authentication:login')
+        else:
+            # Debug: print form errors to console/logs
+            print('Registration form errors:', form.errors.as_json())
     else:
         form = UserRegistrationForm()
 
@@ -97,7 +102,7 @@ def logout_view(request):
     """
     logout(request)
     messages.info(request, 'You have been logged out successfully.')
-    return redirect('authentication:login')
+    return redirect('dashboard:home')
 
 
 @login_required

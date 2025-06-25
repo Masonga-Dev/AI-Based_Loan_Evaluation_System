@@ -17,6 +17,7 @@ from .models import OCRResult, ExtractedField, DocumentValidation, DocumentTempl
 from .ocr_utils import OCRProcessor
 from .document_validators import DocumentValidator
 from apps.loan_application.models import ApplicationDocument
+from apps.dashboard.utils import create_notification
 
 
 class DocumentListView(LoginRequiredMixin, ListView):
@@ -97,11 +98,23 @@ def upload_document(request, application_id):
 
         if not uploaded_file:
             messages.error(request, 'Please select a file to upload.')
+            # Notify applicant of failed upload
+            create_notification(
+                application.applicant,
+                f'Failed to upload document for application {application.application_number}: No file selected.',
+                link=f'/loan_application/{application.pk}/detail/'
+            )
             return redirect('loan_application:detail', pk=application_id)
 
         # Validate file
         if not validate_uploaded_file(uploaded_file):
             messages.error(request, 'Invalid file type or size. Please upload PDF, JPG, or PNG files under 10MB.')
+            # Notify applicant of invalid file
+            create_notification(
+                application.applicant,
+                f'Failed to upload document for application {application.application_number}: Invalid file type or size.',
+                link=f'/loan_application/{application.pk}/detail/'
+            )
             return redirect('loan_application:detail', pk=application_id)
 
         # Create document record
@@ -172,12 +185,15 @@ def validate_document(request, document_id):
     try:
         validator = DocumentValidator()
         validation_result = validator.validate_document(document)
-
         messages.success(request, 'Document validation completed successfully.')
-
     except Exception as e:
         messages.error(request, f'Document validation failed: {str(e)}')
-
+        # Notify applicant of validation failure
+        create_notification(
+            document.application.applicant,
+            f'Document validation failed for {document.document_name}: {str(e)}',
+            link=f'/document_processing/{document.pk}/detail/'
+        )
     return redirect('document_processing:detail', pk=document_id)
 
 

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Loan Application Management{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Loan Application Management</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-3">
+                <div class="col-md-3">
+                    <label for="filter-date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="filter-date" name="date">
+                </div>
+                <div class="col-md-3">
+                    <label for="filter-status" class="form-label">Status</label>
+                    <select class="form-select" id="filter-status" name="status">
+                        <option value="">All</option>
+                        <option value="draft">Draft</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filter-amount" class="form-label">Amount (min)</label>
+                    <input type="number" class="form-control" id="filter-amount" name="amount_min" placeholder="Min Amount">
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>App #</th>
+                            <th>Applicant</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th>AI Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example row, replace with Django loop -->
+                        <tr>
+                            <td>LA202506260001</td>
+                            <td>Jane Doe</td>
+                            <td>2025-06-26</td>
+                            <td><span class="badge bg-warning text-dark">Under Review</span></td>
+                            <td>5,000,000</td>
+                            <td><span class="badge bg-info">82%</span></td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-outline-primary" title="View Documents"><i class="bi bi-file-earmark-pdf"></i></a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary" title="View Data"><i class="bi bi-search"></i></a>
+                                <a href="#" class="btn btn-sm btn-outline-success" title="AI Prediction"><i class="bi bi-graph-up"></i></a>
+                                <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#approveModal"><i class="bi bi-check2-circle"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle"></i></button>
+                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#flagModal"><i class="bi bi-flag"></i></button>
+                            </td>
+                        </tr>
+                        <!-- End example row -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="approveModalLabel">Approve Application</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Are you sure you want to approve this application?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success">Approve</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="rejectModalLabel">Reject Application</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label for="rejection-reason" class="form-label">Reason for rejection:</label>
+            <textarea class="form-control" id="rejection-reason" rows="3"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger">Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Flag Modal -->
+    <div class="modal fade" id="flagModal" tabindex="-1" aria-labelledby="flagModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="flagModalLabel">Flag Suspicious Document</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label for="flag-reason" class="form-label">Reason for flagging:</label>
+            <textarea class="form-control" id="flag-reason" rows="3"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-warning">Flag</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
