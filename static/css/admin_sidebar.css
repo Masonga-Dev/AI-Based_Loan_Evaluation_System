@@ -1,0 +1,401 @@
+/* Admin Dashboard Sidebar Styles - Gradient Theme */
+
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 280px;
+    background: #f8f9fc;
+    border-right: 2px solid #e3e6f0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    box-shadow: 4px 0 15px rgba(58, 59, 69, 0.15);
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #e3e6f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fc;
+}
+
+/* User Profile Styling */
+.user-profile {
+    color: #5a5c69;
+}
+
+.user-avatar .avatar-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    border: 2px solid #fc0c0c;
+}
+
+.user-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: #5a5c69;
+    margin-bottom: 2px;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #858796;
+}
+
+.sidebar-toggle {
+    color: #5a5c69 !important;
+}
+
+.sidebar-nav {
+    padding: 1rem 0;
+    flex: 1;
+}
+
+.sidebar-nav .nav-item {
+    margin-bottom: 0.25rem;
+}
+
+/* Main Navigation Links */
+.main-nav-link {
+    color: #5a5c69 !important;
+    padding: 12px 20px !important;
+    margin: 2px 10px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    border: none !important;
+    text-decoration: none !important;
+}
+
+.main-nav-link:hover {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    color: white !important;
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(252, 12, 12, 0.3);
+}
+
+.main-nav-link.active {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(252, 12, 12, 0.3);
+}
+
+.main-nav-link i {
+    color: #5a5c69 !important;
+    width: 20px;
+    text-align: center;
+}
+
+.main-nav-link:hover i,
+.main-nav-link.active i {
+    color: white !important;
+}
+
+/* Submenu Styling */
+.submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: rgba(227, 230, 240, 0.5);
+    border-radius: 8px;
+    margin: 5px 20px;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+}
+
+.submenu.show {
+    max-height: 200px;
+}
+
+.submenu li {
+    border-bottom: 1px solid rgba(90, 92, 105, 0.1);
+}
+
+.submenu li:last-child {
+    border-bottom: none;
+}
+
+.submenu a {
+    color: #858796 !important;
+    padding: 10px 20px !important;
+    display: block !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    font-size: 14px !important;
+}
+
+.submenu a:hover {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    color: white !important;
+    padding-left: 25px !important;
+}
+
+.submenu-arrow {
+    transition: transform 0.3s ease;
+}
+
+.submenu-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+/* Badge Styling */
+.badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.badge.bg-warning {
+    background-color: #f6c23e !important;
+    color: white !important;
+}
+
+/* Sidebar Footer Styling */
+.sidebar-footer {
+    background: #f8f9fc;
+    border-top: 1px solid #e3e6f0;
+}
+
+/* Override any Bootstrap nav-link styles */
+.nav-link:hover,
+.nav-link.active,
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active,
+.sidebar-nav .nav .nav-link:hover,
+.sidebar-nav .nav .nav-link.active {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    background-color: transparent !important;
+    color: white !important;
+}
+
+/* Specific targeting for admin sidebar */
+.sidebar[class*="sidebar"] .nav-link:hover,
+.sidebar[class*="sidebar"] .nav-link.active {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    background-color: transparent !important;
+    color: white !important;
+}
+
+.sidebar-nav .nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.sidebar-nav .nav-section-header {
+    padding: 1rem 1.5rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #b7b9cc;
+    letter-spacing: 0.1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e3e6f0;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    background: #f8f9fc;
+    border-top: 1px solid #e3e6f0;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    min-height: 100vh;
+    background: #f8f9fc;
+    transition: margin-left 0.3s ease;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+    }
+    
+    .sidebar-overlay.show {
+        display: block;
+    }
+    
+    .mobile-sidebar-toggle {
+        display: block !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .sidebar-toggle {
+        display: none !important;
+    }
+    
+    .mobile-sidebar-toggle {
+        display: none !important;
+    }
+}
+
+/* Badge Styles */
+.sidebar-nav .badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.sidebar-nav .badge.bg-info {
+    background: #36b9cc !important;
+    animation: pulse 2s infinite;
+}
+
+.sidebar-nav .badge.bg-warning {
+    background: #f6c23e !important;
+}
+
+.sidebar-nav .badge.bg-danger {
+    background: #e74a3b !important;
+}
+
+.sidebar-nav .badge.bg-primary {
+    background: #4e73df !important;
+}
+
+/* Scrollbar Styles */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Animation for nav items */
+.sidebar-nav .nav-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-nav .nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: #4e73df;
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-nav .nav-link.active::before {
+    transform: scaleY(1);
+}
+
+/* Hover effects */
+.sidebar-nav .nav-link:hover i {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Coming soon badge animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* FINAL OVERRIDE - Ensure gradient is applied */
+body .sidebar .sidebar-nav .nav-link:hover,
+body .sidebar .sidebar-nav .nav-link.active,
+body .sidebar .sidebar-nav ul.nav li.nav-item a.nav-link:hover,
+body .sidebar .sidebar-nav ul.nav li.nav-item a.nav-link.active {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    background-color: transparent !important;
+    background-image: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    color: white !important;
+}
+
+/* Simple and direct gradient application */
+.nav-link:hover,
+.nav-link.active {
+    background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
+    color: white !important;
+}
+
+.badge.bg-info {
+    animation: pulse 2s infinite;
+}
+
+/* Mobile header toggle button */
+.mobile-header-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    background: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .sidebar {
+        width: 100%;
+    }
+    
+    .sidebar-nav .nav-link {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .sidebar-nav .nav-section-header {
+        padding: 1.5rem 1.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}

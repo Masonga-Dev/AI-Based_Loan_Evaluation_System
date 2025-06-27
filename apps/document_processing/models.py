@@ -77,6 +77,16 @@ class OCRResult(models.Model):
     def __str__(self):
         return f"OCR for {self.document.document_name}"
 
+    @property
+    def is_high_confidence(self):
+        """Check if OCR result has high confidence"""
+        return self.confidence_score and self.confidence_score >= 80
+
+    @property
+    def needs_manual_review(self):
+        """Check if OCR result needs manual review"""
+        return not self.confidence_score or self.confidence_score < 60
+
 
 class ExtractedField(models.Model):
     """
@@ -115,6 +125,93 @@ class ExtractedField(models.Model):
 
     def __str__(self):
         return f"{self.field_name}: {self.field_value[:50]}"
+
+
+class DocumentVerification(models.Model):
+    """
+    Document verification status and admin review
+    """
+    VERIFICATION_STATUS_CHOICES = [
+        ('pending', 'Pending Verification'),
+        ('verified', 'Verified'),
+        ('needs_correction', 'Needs Correction'),
+        ('rejected', 'Rejected'),
+        ('flagged', 'Flagged for Review'),
+    ]
+
+    document = models.OneToOneField(
+        'loan_application.ApplicationDocument',
+        on_delete=models.CASCADE,
+        related_name='verification'
+    )
+
+    status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='pending')
+
+    # Verification details
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_documents')
+    verification_notes = models.TextField(blank=True)
+
+    # OCR vs Manual comparison
+    ocr_manual_match = models.BooleanField(null=True, blank=True)  # True if OCR matches manual entry
+    discrepancies = models.JSONField(default=list, blank=True)  # List of field discrepancies
+
+    # Quality assessment
+    image_quality_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    readability_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'document_verification'
+        verbose_name = 'Document Verification'
+        verbose_name_plural = 'Document Verifications'
+
+    def __str__(self):
+        return f"Verification for {self.document.document_name} - {self.status}"
+
+
+class OCRComparison(models.Model):
+    """
+    Compare OCR extracted data with manually entered data
+    """
+    COMPARISON_STATUS_CHOICES = [
+        ('pending', 'Pending Comparison'),
+        ('match', 'Data Matches'),
+        ('mismatch', 'Data Mismatch'),
+        ('partial_match', 'Partial Match'),
+        ('no_manual_data', 'No Manual Data Available'),
+    ]
+
+    ocr_result = models.OneToOneField(OCRResult, on_delete=models.CASCADE, related_name='comparison')
+    application = models.ForeignKey('loan_application.LoanApplication', on_delete=models.CASCADE)
+
+    status = models.CharField(max_length=20, choices=COMPARISON_STATUS_CHOICES, default='pending')
+
+    # Comparison results
+    matched_fields = models.JSONField(default=list, blank=True)
+    mismatched_fields = models.JSONField(default=list, blank=True)
+    missing_fields = models.JSONField(default=list, blank=True)
+
+    # Scores
+    match_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    confidence_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    # Review status
+    requires_admin_review = models.BooleanField(default=False)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    review_notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'ocr_comparison'
+        verbose_name = 'OCR Comparison'
+        verbose_name_plural = 'OCR Comparisons'
+
+    def __str__(self):
+        return f"Comparison for {self.ocr_result.document.document_name} - {self.status}"
 
 
 class DocumentValidation(models.Model):

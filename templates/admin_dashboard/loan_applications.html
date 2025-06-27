@@ -1,75 +1,641 @@
-{% extends 'base.html' %}
+{% extends 'admin_dashboard/base_admin.html' %}
 {% load static %}
 {% block title %}Loan Application Management{% endblock %}
-{% block content %}
-<div class="container-fluid py-4">
-    <h2 class="mb-4">Loan Application Management</h2>
-    <div class="card mb-4">
-        <div class="card-body">
-            <form class="row g-3">
-                <div class="col-md-3">
-                    <label for="filter-date" class="form-label">Date</label>
-                    <input type="date" class="form-control" id="filter-date" name="date">
+
+{% block page_title %}Loan Applications Management{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Loan Applications</li>
+{% endblock %}
+
+{% block page_actions %}
+<button class="btn btn-outline-primary me-2" onclick="exportApplications()">
+    <i class="fas fa-download me-1"></i> Export
+</button>
+<button class="btn btn-primary" onclick="refreshApplications()">
+    <i class="fas fa-sync-alt me-1"></i> Refresh
+</button>
+{% endblock %}
+
+{% block admin_extra_css %}
+<style>
+    .stats-card {
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    .stats-card.primary { border-left-color: #0d6efd; }
+    .stats-card.warning { border-left-color: #ffc107; }
+    .stats-card.success { border-left-color: #198754; }
+    .stats-card.danger { border-left-color: #dc3545; }
+
+    .ai-score-badge {
+        font-weight: bold;
+        min-width: 50px;
+    }
+
+    .application-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .bulk-actions {
+        display: none;
+        background: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .bulk-actions.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Applications
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="filter-status" class="form-label">Status</label>
-                    <select class="form-select" id="filter-status" name="status">
-                        <option value="">All</option>
-                        <option value="draft">Draft</option>
-                        <option value="submitted">Submitted</option>
-                        <option value="under_review">Under Review</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Pending Review
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Approved
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.approved }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Total Amount
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                RWF {{ stats.total_amount|floatformat:0 }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter me-2"></i>Filters & Search
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ filters.date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ filters.date_to }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="filter-amount" class="form-label">Amount (min)</label>
-                    <input type="number" class="form-control" id="filter-amount" name="amount_min" placeholder="Min Amount">
+                <div class="col-md-2">
+                    <label for="amount_min" class="form-label">Min Amount</label>
+                    <input type="number" class="form-control" id="amount_min" name="amount_min" value="{{ filters.amount_min }}" placeholder="0">
                 </div>
-                <div class="col-md-3 align-self-end">
-                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Filter</button>
+                <div class="col-md-2">
+                    <label for="amount_max" class="form-label">Max Amount</label>
+                    <input type="number" class="form-control" id="amount_max" name="amount_max" value="{{ filters.amount_max }}" placeholder="No limit">
+                </div>
+                <div class="col-md-2">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ filters.search }}" placeholder="Name, email, app#">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'admin_dashboard:loan_applications' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Clear
+                    </a>
                 </div>
             </form>
         </div>
     </div>
+    <!-- Bulk Actions -->
+    <div class="bulk-actions" id="bulkActions">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong><span id="selectedCount">0</span> applications selected</strong>
+            </div>
+            <div>
+                <button class="btn btn-success btn-sm me-2" onclick="bulkApprove()">
+                    <i class="fas fa-check me-1"></i> Bulk Approve
+                </button>
+                <button class="btn btn-danger btn-sm me-2" onclick="bulkReject()">
+                    <i class="fas fa-times me-1"></i> Bulk Reject
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+                    <i class="fas fa-times me-1"></i> Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
     <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-2"></i>Applications List
+                </h6>
+                <div>
+                    <select class="form-select form-select-sm d-inline-block w-auto me-2" onchange="changeSort(this.value)">
+                        <option value="-created_at" {% if filters.sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                        <option value="created_at" {% if filters.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                        <option value="-loan_amount" {% if filters.sort == '-loan_amount' %}selected{% endif %}>Highest Amount</option>
+                        <option value="loan_amount" {% if filters.sort == 'loan_amount' %}selected{% endif %}>Lowest Amount</option>
+                        <option value="-ai_score" {% if filters.sort == '-ai_score' %}selected{% endif %}>Highest AI Score</option>
+                        <option value="ai_score" {% if filters.sort == 'ai_score' %}selected{% endif %}>Lowest AI Score</option>
+                    </select>
+                    <button class="btn btn-outline-primary btn-sm" onclick="toggleSelectAll()">
+                        <i class="fas fa-check-square me-1"></i> Select All
+                    </button>
+                </div>
+            </div>
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th width="40">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                            </th>
                             <th>App #</th>
                             <th>Applicant</th>
                             <th>Date</th>
                             <th>Status</th>
-                            <th>Amount</th>
+                            <th>Amount (RWF)</th>
                             <th>AI Score</th>
+                            <th>Risk Level</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Example row, replace with Django loop -->
-                        <tr>
-                            <td>LA202506260001</td>
-                            <td>Jane Doe</td>
-                            <td>2025-06-26</td>
-                            <td><span class="badge bg-warning text-dark">Under Review</span></td>
-                            <td>5,000,000</td>
-                            <td><span class="badge bg-info">82%</span></td>
+                        {% for application in applications %}
+                        <tr class="application-row" data-application-id="{{ application.id }}">
                             <td>
-                                <a href="#" class="btn btn-sm btn-outline-primary" title="View Documents"><i class="bi bi-file-earmark-pdf"></i></a>
-                                <a href="#" class="btn btn-sm btn-outline-secondary" title="View Data"><i class="bi bi-search"></i></a>
-                                <a href="#" class="btn btn-sm btn-outline-success" title="AI Prediction"><i class="bi bi-graph-up"></i></a>
-                                <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#approveModal"><i class="bi bi-check2-circle"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle"></i></button>
-                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#flagModal"><i class="bi bi-flag"></i></button>
+                                <input type="checkbox" class="application-checkbox" value="{{ application.id }}" onchange="updateBulkActions()">
+                            </td>
+                            <td>
+                                <strong class="text-primary">{{ application.application_number }}</strong>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-2">
+                                        {% if application.applicant.profile_picture %}
+                                            <img src="{{ application.applicant.profile_picture.url }}" class="rounded-circle" width="32" height="32">
+                                        {% else %}
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                <span class="text-white small">{{ application.applicant.first_name.0 }}{{ application.applicant.last_name.0 }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ application.applicant.get_full_name }}</div>
+                                        <small class="text-muted">{{ application.applicant.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ application.created_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ application.created_at|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if application.status == 'approved' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Approved
+                                    </span>
+                                {% elif application.status == 'rejected' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times me-1"></i>Rejected
+                                    </span>
+                                {% elif application.status == 'under_review' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>Under Review
+                                    </span>
+                                {% elif application.status == 'submitted' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-paper-plane me-1"></i>Submitted
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-edit me-1"></i>{{ application.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ application.loan_amount|floatformat:0 }}</strong>
+                                <div>
+                                    <small class="text-muted">{{ application.get_loan_type_display }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if application.ai_score %}
+                                    {% if application.ai_score >= 80 %}
+                                        <span class="badge bg-success ai-score-badge">{{ application.ai_score|floatformat:0 }}%</span>
+                                    {% elif application.ai_score >= 60 %}
+                                        <span class="badge bg-warning ai-score-badge">{{ application.ai_score|floatformat:0 }}%</span>
+                                    {% else %}
+                                        <span class="badge bg-danger ai-score-badge">{{ application.ai_score|floatformat:0 }}%</span>
+                                    {% endif %}
+                                    <div>
+                                        <small class="text-muted">{{ application.ai_recommendation|title }}</small>
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if application.risk_level %}
+                                    {% if application.risk_level == 'low' %}
+                                        <span class="badge bg-success">Low Risk</span>
+                                    {% elif application.risk_level == 'medium' %}
+                                        <span class="badge bg-warning">Medium Risk</span>
+                                    {% elif application.risk_level == 'high' %}
+                                        <span class="badge bg-danger">High Risk</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">Very High Risk</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Assessed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewApplication('{{ application.id }}')" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="viewDocuments('{{ application.id }}')" title="View Documents">
+                                        <i class="fas fa-file-alt"></i>
+                                    </button>
+                                    {% if application.status == 'under_review' or application.status == 'submitted' %}
+                                        <button type="button" class="btn btn-outline-success btn-sm" onclick="approveApplication('{{ application.id }}')" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="rejectApplication('{{ application.id }}')" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    {% endif %}
+                                    {% if not application.ai_score %}
+                                        <button type="button" class="btn btn-outline-info btn-sm" onclick="runAIEvaluation('{{ application.id }}')" title="Run AI Evaluation">
+                                            <i class="fas fa-robot"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
-                        <!-- End example row -->
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <h5>No applications found</h5>
+                                    <p>Try adjusting your filters or search criteria.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted">
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} applications
+                </div>
+                <nav aria-label="Applications pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+<!-- JavaScript for Enhanced Functionality -->
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+// Global variables
+let selectedApplications = new Set();
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    updateBulkActions();
+});
+
+// Bulk actions functionality
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.application-checkbox:checked');
+    const count = checkboxes.length;
+
+    selectedApplications.clear();
+    checkboxes.forEach(cb => selectedApplications.add(cb.value));
+
+    document.getElementById('selectedCount').textContent = count;
+
+    const bulkActions = document.getElementById('bulkActions');
+    if (count > 0) {
+        bulkActions.classList.add('show');
+    } else {
+        bulkActions.classList.remove('show');
+    }
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const applicationCheckboxes = document.querySelectorAll('.application-checkbox');
+
+    applicationCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+
+    updateBulkActions();
+}
+
+function clearSelection() {
+    document.querySelectorAll('.application-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateBulkActions();
+}
+
+// Bulk operations
+function bulkApprove() {
+    if (selectedApplications.size === 0) return;
+
+    if (confirm(`Are you sure you want to approve ${selectedApplications.size} applications?`)) {
+        performBulkAction('approved', 'Bulk approval by admin');
+    }
+}
+
+function bulkReject() {
+    if (selectedApplications.size === 0) return;
+
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason) {
+        performBulkAction('rejected', reason);
+    }
+}
+
+function performBulkAction(decision, reason) {
+    const data = {
+        application_ids: Array.from(selectedApplications),
+        decision: decision,
+        reason: reason
+    };
+
+    fetch('{% url "admin_dashboard:bulk_approve_applications" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Successfully processed ${data.processed} applications.`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing applications.');
+    });
+}
+
+// Individual application actions
+function viewApplication(applicationId) {
+    window.open(`/applications/${applicationId}/detail/`, '_blank');
+}
+
+function viewDocuments(applicationId) {
+    window.open(`/admin-dashboard/uploaded-documents/?application_id=${applicationId}`, '_blank');
+}
+
+function approveApplication(applicationId) {
+    if (confirm('Are you sure you want to approve this application?')) {
+        window.location.href = `{% url 'admin_dashboard:approve_reject' %}?application_id=${applicationId}`;
+    }
+}
+
+function rejectApplication(applicationId) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason) {
+        window.location.href = `{% url 'admin_dashboard:approve_reject' %}?application_id=${applicationId}&decision=rejected&reason=${encodeURIComponent(reason)}`;
+    }
+}
+
+function runAIEvaluation(applicationId) {
+    if (confirm('Run AI evaluation for this application?')) {
+        fetch(`/ai/evaluate/${applicationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('AI evaluation completed successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during AI evaluation.');
+        });
+    }
+}
+
+// Utility functions
+function changeSort(sortValue) {
+    const url = new URL(window.location);
+    url.searchParams.set('sort', sortValue);
+    window.location.href = url.toString();
+}
+
+function refreshApplications() {
+    location.reload();
+}
+
+function exportApplications() {
+    const url = new URL(window.location);
+    url.searchParams.set('export', 'csv');
+    window.open(url.toString(), '_blank');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+    <!-- Documents Modal -->
+    <div class="modal fade" id="documentsModal" tabindex="-1" aria-labelledby="documentsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="documentsModalLabel">Uploaded Documents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>PDFs and scanned files for this application.</p>
+            <!-- List documents here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- OCR Modal -->
+    <div class="modal fade" id="ocrModal" tabindex="-1" aria-labelledby="ocrModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="ocrModalLabel">OCR/Extracted Data</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Manually entered or OCR-extracted data for this application.</p>
+            <!-- Show OCR data here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- AI Modal -->
+    <div class="modal fade" id="aiModal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="aiModalLabel">AI Prediction</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>AI approval chance / credit score for this application.</p>
+            <!-- Show AI prediction here -->
+          </div>
+        </div>
+      </div>
     </div>
     <!-- Approve Modal -->
     <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">

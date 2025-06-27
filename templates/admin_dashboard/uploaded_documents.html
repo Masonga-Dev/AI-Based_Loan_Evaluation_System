@@ -1,5 +1,111 @@
-{% extends 'base.html' %}
-{% block content %}
-<h2>Uploaded Documents</h2>
-<p>Placeholder for uploaded documents management.</p>
+{% extends 'admin_dashboard/base_admin.html' %}
+{% load static %}
+{% block title %}Uploaded Documents{% endblock %}
+
+{% block page_title %}Document Management{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Uploaded Documents</li>
+{% endblock %}
+
+{% block page_actions %}
+<button class="btn btn-outline-primary me-2" onclick="bulkProcessDocuments()">
+    <i class="fas fa-cogs me-1"></i> Bulk Process
+</button>
+<button class="btn btn-primary" onclick="refreshDocuments()">
+    <i class="fas fa-sync-alt me-1"></i> Refresh
+</button>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-file-upload fa-2x text-primary mb-2"></i>
+                <h5 class="card-title">{{ documents.count|default:0 }}</h5>
+                <p class="card-text text-muted">Total Documents</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h5 class="card-title">{{ verified_count|default:0 }}</h5>
+                <p class="card-text text-muted">Verified</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-flag fa-2x text-danger mb-2"></i>
+                <h5 class="card-title">{{ flagged_count|default:0 }}</h5>
+                <p class="card-text text-muted">Flagged</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                <h5 class="card-title">{{ pending_count|default:0 }}</h5>
+                <p class="card-text text-muted">Pending Review</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-list me-2"></i>Documents Management
+        </h6>
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            This comprehensive document management system will show all uploaded documents with OCR preview, verification status, and flagging capabilities.
+        </p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-primary">Features Available:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Document upload and storage</li>
+                    <li><i class="fas fa-check text-success me-2"></i> OCR text extraction</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Document verification workflow</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Flagging system for suspicious documents</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-primary">Coming Soon:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-clock text-warning me-2"></i> Advanced filtering and search</li>
+                    <li><i class="fas fa-clock text-warning me-2"></i> Bulk document processing</li>
+                    <li><i class="fas fa-clock text-warning me-2"></i> Document comparison tools</li>
+                    <li><i class="fas fa-clock text-warning me-2"></i> Export and reporting features</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Note:</strong> The full document management interface with filtering, pagination, and advanced features is ready to be implemented. The backend models and views are already in place.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+function bulkProcessDocuments() {
+    alert('Bulk processing feature is ready to be implemented with the existing backend infrastructure.');
+}
+
+function refreshDocuments() {
+    location.reload();
+}
+</script>
 {% endblock %}

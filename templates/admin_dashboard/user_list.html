@@ -1,0 +1,461 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+{% load static %}
+{% block title %}User Management{% endblock %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Users</li>
+{% endblock %}
+
+{% block page_actions %}
+<button class="btn btn-outline-primary me-2" onclick="exportUsers()">
+    <i class="fas fa-download me-1"></i> Export
+</button>
+<button class="btn btn-outline-secondary me-2" onclick="showBulkActions()">
+    <i class="fas fa-tasks me-1"></i> Bulk Actions
+</button>
+<button class="btn btn-primary" onclick="refreshUsers()">
+    <i class="fas fa-sync-alt me-1"></i> Refresh
+</button>
+{% endblock %}
+
+{% block admin_content %}
+<!-- User Statistics -->
+<div class="row mb-4">
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h5 class="card-title">{{ user_stats.total|default:0 }}</h5>
+                <p class="card-text text-muted">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                <h5 class="card-title">{{ user_stats.active|default:0 }}</h5>
+                <p class="card-text text-muted">Active</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-user-shield fa-2x text-danger mb-2"></i>
+                <h5 class="card-title">{{ user_stats.admins|default:0 }}</h5>
+                <p class="card-text text-muted">Admins</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-info mb-2"></i>
+                <h5 class="card-title">{{ user_stats.verified|default:0 }}</h5>
+                <p class="card-text text-muted">Verified</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <h5 class="card-title">{{ user_stats.high_risk|default:0 }}</h5>
+                <p class="card-text text-muted">High Risk</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-user-plus fa-2x text-secondary mb-2"></i>
+                <h5 class="card-title">{{ user_stats.new_this_month|default:0 }}</h5>
+                <p class="card-text text-muted">New This Month</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions Panel -->
+<div class="card mb-4" id="bulkActionsPanel" style="display: none;">
+    <div class="card-header bg-light">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-tasks me-2"></i>Bulk Actions
+            <span class="badge bg-primary ms-2" id="selectedUsersCount">0 selected</span>
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <button class="btn btn-success w-100" onclick="bulkAction('activate')">
+                    <i class="fas fa-user-check me-1"></i> Activate Users
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-warning w-100" onclick="bulkAction('deactivate')">
+                    <i class="fas fa-user-slash me-1"></i> Deactivate Users
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-info w-100" onclick="bulkAction('verify')">
+                    <i class="fas fa-check-circle me-1"></i> Verify Users
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-secondary w-100" onclick="clearSelection()">
+                    <i class="fas fa-times me-1"></i> Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-list me-2"></i>Users List
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="40">
+                            <input type="checkbox" id="selectAllUsers" onchange="toggleSelectAll()">
+                        </th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Risk Level</th>
+                        <th>Verified</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="user-row" data-user-id="{{ user.id }}">
+                        <td>
+                            <input type="checkbox" class="user-checkbox" value="{{ user.id }}" onchange="updateBulkActions()">
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-2">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" class="rounded-circle" width="32" height="32">
+                                    {% else %}
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <span class="text-white small">{{ user.first_name.0 }}{{ user.last_name.0 }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">
+                                        <a href="{% url 'admin_dashboard:user_profile_detail' user.id %}" class="text-decoration-none">
+                                            {{ user.get_full_name }}
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">{{ user.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.role == 'admin' %}
+                                <span class="badge bg-danger">{{ user.get_role_display }}</span>
+                            {% elif user.role == 'manager' %}
+                                <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                            {% elif user.role == 'officer' %}
+                                <span class="badge bg-warning">{{ user.get_role_display }}</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ user.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.admin_profile %}
+                                {% if user.admin_profile.risk_level == 'low' %}
+                                    <span class="badge bg-success">Low</span>
+                                {% elif user.admin_profile.risk_level == 'medium' %}
+                                    <span class="badge bg-warning">Medium</span>
+                                {% elif user.admin_profile.risk_level == 'high' %}
+                                    <span class="badge bg-danger">High</span>
+                                {% elif user.admin_profile.risk_level == 'critical' %}
+                                    <span class="badge bg-dark">Critical</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Unknown</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">No Profile</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.admin_profile and user.admin_profile.is_verified %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Verified
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.last_login %}
+                                <div>{{ user.last_login|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ user.last_login|timesince }} ago</small>
+                            {% else %}
+                                <span class="text-muted">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'admin_dashboard:user_profile_detail' user.id %}" class="btn btn-outline-primary btn-sm" title="View Profile">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if user.role != 'admin' and user != request.user %}
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="promoteUser('{{ user.id }}')" title="Promote User">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                {% endif %}
+                                {% if user != request.user and user.is_active %}
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deactivateUser('{{ user.id }}')" title="Deactivate User">
+                                        <i class="fas fa-user-slash"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-users fa-3x mb-3"></i>
+                                <h5>No users found</h5>
+                                <p>No users are currently registered in the system.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+// Global variables
+let selectedUsers = new Set();
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    updateBulkActions();
+});
+
+// Bulk actions functionality
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = checkboxes.length;
+
+    selectedUsers.clear();
+    checkboxes.forEach(cb => selectedUsers.add(cb.value));
+
+    document.getElementById('selectedUsersCount').textContent = `${count} selected`;
+
+    const panel = document.getElementById('bulkActionsPanel');
+    if (count > 0) {
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllUsers');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+
+    updateBulkActions();
+}
+
+function clearSelection() {
+    document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllUsers').checked = false;
+    updateBulkActions();
+}
+
+function showBulkActions() {
+    const panel = document.getElementById('bulkActionsPanel');
+    if (panel.style.display === 'none' || !panel.style.display) {
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+// Bulk operations
+function bulkAction(action) {
+    if (selectedUsers.size === 0) {
+        alert('Please select users first.');
+        return;
+    }
+
+    let confirmMessage = '';
+    switch(action) {
+        case 'activate':
+            confirmMessage = `Are you sure you want to activate ${selectedUsers.size} users?`;
+            break;
+        case 'deactivate':
+            confirmMessage = `Are you sure you want to deactivate ${selectedUsers.size} users?`;
+            break;
+        case 'verify':
+            confirmMessage = `Are you sure you want to verify ${selectedUsers.size} users?`;
+            break;
+        default:
+            return;
+    }
+
+    if (confirm(confirmMessage)) {
+        performBulkAction(action);
+    }
+}
+
+function performBulkAction(action) {
+    const data = {
+        user_ids: Array.from(selectedUsers),
+        action: action
+    };
+
+    fetch('{% url "admin_dashboard:bulk_user_actions" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Successfully processed ${data.processed} users.`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing users.');
+    });
+}
+
+// Individual user actions
+function promoteUser(userId) {
+    const newRole = prompt('Enter new role (officer, manager, admin):');
+    if (newRole && ['officer', 'manager', 'admin'].includes(newRole)) {
+        const reason = prompt('Enter reason for promotion (optional):') || 'Role promotion by admin';
+
+        if (confirm(`Are you sure you want to promote this user to ${newRole}?`)) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{% url 'admin_dashboard:promote_user' 0 %}`.replace('0', userId);
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = getCookie('csrftoken');
+
+            const roleInput = document.createElement('input');
+            roleInput.type = 'hidden';
+            roleInput.name = 'new_role';
+            roleInput.value = newRole;
+
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+
+            form.appendChild(csrfToken);
+            form.appendChild(roleInput);
+            form.appendChild(reasonInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    } else if (newRole) {
+        alert('Invalid role. Please enter: officer, manager, or admin');
+    }
+}
+
+function deactivateUser(userId) {
+    const reason = prompt('Please provide a reason for deactivating this user:');
+    if (reason) {
+        if (confirm('Are you sure you want to deactivate this user?')) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{% url 'admin_dashboard:deactivate_user' 0 %}`.replace('0', userId);
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = getCookie('csrftoken');
+
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+
+            form.appendChild(csrfToken);
+            form.appendChild(reasonInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+}
+
+function exportUsers() {
+    alert('User export feature will be implemented with CSV/Excel export options.');
+}
+
+function refreshUsers() {
+    location.reload();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

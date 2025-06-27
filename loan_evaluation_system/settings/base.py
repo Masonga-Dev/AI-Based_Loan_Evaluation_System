@@ -42,6 +42,7 @@ LOCAL_APPS = [
     'apps.document_processing',
     'apps.ai_evaluation',
     'apps.dashboard',
+    'apps.admin_dashboard',
     'apps.api',
 ]
 
@@ -77,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.admin_dashboard.context_processors.admin_sidebar_context',
             ],
         },
     },

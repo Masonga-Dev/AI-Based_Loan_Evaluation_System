@@ -1,148 +1,11 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Equity Bank Rwanda</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body {
-            background: #f4f6fa;
-        }
-        .equity-sidebar {
-            background: #f1f3f8;;
-            min-height: 100vh;
-            color: #fff;
-            padding: 0;
-        }
-        .equity-sidebar .logo {
-            margin: 32px 0 16px 0;
-        }
-        .equity-sidebar .sidebar-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-        }
-        .equity-sidebar .nav-link {
-            color:black;
-            font-size: 1.1rem;
-            padding: 12px 24px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            transition: background 0.2s, color 0.2s;
-        }
-        .equity-sidebar .nav-link.active, .equity-sidebar .nav-link:hover {
-            background: linear-gradient(90deg, #1b1b1b 0%, #fc0c0c 100%) !important;
-            color: white !important;
-        }
-        .equity-sidebar .nav-link i {
-            margin-right: 12px;
-            font-size: 1.3rem;
-        }
-        .main-content {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 2px 16px rgba(35,41,70,0.07);
-            margin: 32px 0;
-            padding: 32px 32px 24px 32px;
-        }
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .dashboard-header h2 {
-            font-weight: 700;
-            color: #232946;
-        }
-        .dashboard-header .subtitle {
-            color: #6e6e6e;
-            font-weight: 500;
-            font-size: 1.1rem;
-        }
-        .dashboard-header .profile {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #eebbc3;
-        }
-        .summary-cards .card {
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            box-shadow: none;
-            text-align: center;
-            padding: 24px 0;
-            background: #f7f7fa;
-            transition: box-shadow 0.2s;
-        }
-        .summary-cards .card:hover {
-            box-shadow: 0 4px 24px rgba(35,41,70,0.10);
-        }
-        .summary-cards .card i {
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-        }
-        .summary-cards .card h3 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #232946;
-        }
-        .summary-cards .card span {
-            color: #6e6e6e;
-            font-size: 1.1rem;
-        }
-        .recent-applications, .loan-approvals-chart {
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            background: #fff;
-            padding: 24px;
-            height: 100%;
-        }
-        .recent-applications {
-            border-right: 2px solid #e5e7eb;
-        }
-        .recent-applications .badge {
-            font-size: 1rem;
-            padding: 6px 16px;
-            border-radius: 12px;
-        }
-        .badge.bg-success {
-            background-color: #3dd598 !important;
-            color: #fff !important;
-        }
-        .badge.bg-danger {
-            background-color: #ff6363 !important;
-            color: #fff !important;
-        }
-        .badge.bg-warning {
-            background-color: #ffe066 !important;
-            color: #232946 !important;
-        }
-        .pagination .page-link {
-            color: #232946;
-            border: none;
-            background: transparent;
-        }
-        .pagination .page-item.active .page-link {
-            background: #eebbc3;
-            color: #232946;
-            border-radius: 8px;
-        }
-        @media (max-width: 991px) {
-            .main-content {
-                padding: 16px 4px;
-            }
-        }
-    </style>
-</head>
-<body>
+
+{% block sidebar %}
+{% include 'dashboard/admin_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
 <div class="container-fluid">
     <!-- Profile Header Row (full width) -->
     <div class="row" style="background:#fff; border-bottom:2px solid #e5e7eb; align-items:center; min-height:70px;">
@@ -182,30 +45,7 @@
     </div>
     <div class="row">
         <!-- Sidebar (starts below header) -->
-        <nav class="col-md-2 equity-sidebar d-flex flex-column align-items-center pt-4" style="border-right:1px solid #e5e7eb; min-height:calc(100vh - 70px);">
-            <!-- Removed logo from sidebar -->
-            <div class="sidebar-title">Admin</div>
-            <ul class="nav flex-column w-100">
-                <li class="nav-item mb-2">
-                    <a class="nav-link active" href="#"><i class="bi bi-house-door"></i> Dashboard</a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="{% url 'admin_dashboard:loan_applications' %}"><i class="bi bi-file-earmark-text"></i> Loan Applications</a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="{% url 'admin_dashboard:user_list' %}"><i class="bi bi-people"></i> Users</a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="#"><i class="bi bi-cpu"></i> AI Model</a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="#"><i class="bi bi-folder"></i> Documents</a>
-                </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link" href="#"><i class="bi bi-gear"></i> Settings</a>
-                </li>
-            </ul>
-        </nav>
+        {% include 'dashboard/admin_sidebar.html' %}
         <!-- Main Content -->
         <main class="col-md-10 main-content">
             <div class="dashboard-header" style="display:none;"></div>
@@ -301,33 +141,4 @@
 <footer class="text-center py-3 mt-4" style="background:#f1f3f8; border-top:1px solid #e5e7eb; color:#6e6e6e;">
     &copy; {{ year|default:2025 }} Equity Bank Rwanda. All rights reserved.
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    var ctx = document.getElementById('loanApprovalsChart').getContext('2d');
-    var loanApprovalsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024', '2024'],
-            datasets: [{
-                label: 'Loan Approvals',
-                data: [25, 40, 35, 50, 45, 60, 55, 65, 60, 70, 68, 75],
-                borderColor: '#23374d',
-                backgroundColor: 'rgba(35,55,77,0.07)',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
-</script>
-</body>
-</html>
+{% endblock %}
